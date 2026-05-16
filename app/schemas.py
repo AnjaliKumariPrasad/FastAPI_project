@@ -34,7 +34,7 @@ class Post(PostBase):
 }
 
 class PostOut(BaseModel):
-    Post: Post
+    post: Post
     votes: int
      
     model_config = {
