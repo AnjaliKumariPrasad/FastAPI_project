@@ -4,7 +4,6 @@ from typing import Optional, Annotated
 from pydantic import BaseModel, EmailStr, Field
 from datetime import datetime
 
-from app.routers import post 
 
 
 
@@ -35,7 +34,7 @@ class Post(PostBase):
 }
 
 class PostOut(BaseModel):
-    Post: post
+    Post: Post
     votes: int
      
     model_config = {
