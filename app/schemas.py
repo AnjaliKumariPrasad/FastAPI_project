@@ -1,7 +1,10 @@
-from typing import Optional
+from typing import Optional, Annotated
 
-from pydantic import BaseModel, EmailStr, conint
-from datetime import datetime 
+
+from pydantic import BaseModel, EmailStr, Field
+from datetime import datetime
+
+from app.routers import post 
 
 
 
@@ -32,11 +35,12 @@ class Post(PostBase):
 }
 
 class PostOut(BaseModel):
-    Post: Post
+    Post: post
     votes: int
      
-    class Config:
-        orm_mode = True 
+    model_config = {
+    "from_attributes": True 
+}   
 
 class UserCreate(BaseModel):
     email: EmailStr
@@ -57,4 +61,4 @@ class TokenData(BaseModel):
     
 class Vote(BaseModel):
     post_id: int
-    dir: conint(le=1)
+    dir: Annotated[int, Field(le=1)]

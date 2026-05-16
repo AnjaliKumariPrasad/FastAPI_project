@@ -1,5 +1,3 @@
-from re import search
-
 from app import oauth2
 from fastapi import FastAPI, Response, status, HTTPException, Depends, APIRouter
 from sqlalchemy.orm import Session
@@ -7,16 +5,33 @@ from typing import List
 from .. import models, schemas , utils
 from sqlalchemy import func
 
+
 from ..dependencies import get_db
 
 router = APIRouter(prefix="/posts", tags=["Posts"])
 
-@router.get("/", response_model=list[schemas.Post])
-def test_posts(db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user), limit: int = 10, skip: int = 0, search: Optional[str] = ""  ):
-    """posts = db.query(models.Post).filter(models.Post.title.contains(search)).limit(limit).offset(skip).all()"""
+@router.get("/", response_model=list[schemas.PostOut])
+def test_posts(
+    db: Session = Depends(get_db),
+    current_user: int = Depends(oauth2.get_current_user),
+    limit: int = 10,
+    skip: int = 0,
+    search: str = ""
+):
+    post = db.query(
+        models.Post,
+        func.count(models.Vote.post_id).label("votes")
+    ).join(
+        models.Vote,
+        models.Vote.post_id == models.Post.id,
+        isouter=True
+    ).group_by(
+        models.Post.id
+    ).filter(
+        models.Post.title.contains(search)
+    ).limit(limit).offset(skip).all()
 
-    post = db.query(models.Post, func.count(models.Vote.post_id).label("votes")).join(models.Vote, models.Vote.post_id == models.Post.id, isouter=True).group_by(models.Post.id).filter(models.Post.title.contains(search)).limit(limit).offset(skip).all()
-    return post  
+    return post
 
 """@app.get("/posts")
 def get_posts():
@@ -72,7 +87,7 @@ def delete_post(id: int, db: Session = Depends(get_db), current_user: int = Depe
             detail="Not authorized to perform requested action"
         )
 
-    post.query.delete(synchronize_session=False)
+    post_query.delete(synchronize_session=False)
     db.commit()
 
     return Response(status_code=status.HTTP_204_NO_CONTENT)
